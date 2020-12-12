@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Kadai</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+</head>
+<body>
+  IN：
+<select name="inLang" id="inLang">
+  <option value="ja">日本語</option>
+  <option value="en">英語</option>
+  <option value="fr">フランス語</option>
+</select>
+　OUT：
+<select name="outLang" id="outLang">
+  OUT：
+  <option value="en">英語</option>
+  <option value="ja">日本語</option>
+  <option value="fr">フランス語</option>
+</select>
+<div id="chat-frame">
+  <!--input-->
+  <input type="text" id="inputText">
+  <!--output-->
+  <div id="output"></div>
+</div>
+
+<button id="sound">音声</button>
+
+<!-- jQuery&speechSDK-->
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<!-- javascript -->
+<script>
+  let subscriptionkey = 'こちらにAPIへのアクセスキーを入力';
+  let endpoint = 'https://api.cognitive.microsofttranslator.com/translate';
+  let path;
+  let output;
+
+
+ //bodyが読み込まれてから実行されるよう予約
+     $(document).on('input', '#inputText', function(e) { //inputフォームに文字が入力されるたびに翻訳
+      let inLang = $('#inLang').val();
+      let outLang = $('#outLang').val();
+      let data = $('#inputText').val();
+      console.log("input:"+inLang+"  out:"+outLang);
+      path = '?api-version=3.0&from='+inLang+'&to='+outLang;
+      fetch(endpoint + path,{
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        mode: 'cors', // no-cors, *cors, same-origin
+        headers: {
+          'Ocp-Apim-Subscription-Key': subscriptionkey,
+          'Ocp-Apim-Subscription-Region': 'japaneast',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify([  //配列("[]")で送らないとエラーになる
+          {'Text': data}
+        ]),
+
+      })
+        .then(response => response.json())
+        // .then(res => console.log(res))
+        .then(res => {
+          console.log(res[0].translations[0].text)
+          output = res[0].translations[0].text;　//翻訳結果
+          $('#output').text(output);          
+          })
+        .then(out => {
+                    
+          $('#sound').on("click", function(){
+              //音声読み上げ機能
+              let speak   = new SpeechSynthesisUtterance();
+              speak.text  = output; //読み上げるテキスト
+              speak.rate  = 1; // 読み上げ速度 0.1-10 初期値:1 (倍速なら2, 半分の倍速なら0.5, )
+              speak.lang  = outLang; 
+              speechSynthesis.speak(speak);
+              //このままでは音声読み上げが複数回実施されるため、強制終了
+              let i= true;
+
+                  if(i==true){
+                      throw new Error("fetchから離脱");//エラーを発生させることで、音声を複数回読み上げるのを阻止
+                  }
+             
+            })
+        })
+        .catch(error => console.log('there are errors'));
+
+
+
+    });
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
